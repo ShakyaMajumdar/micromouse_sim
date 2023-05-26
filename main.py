@@ -1,4 +1,6 @@
 import numpy as np
+import imageio
+
 import random
 import PIL.Image
 from dataclasses import dataclass
@@ -48,7 +50,6 @@ def dfs(
         for direction in directions:
             dr, dc = direction.to_delta()
             nr, nc = r + dr, c + dc
-            # print(nr, nc)
             if not (0 <= nr < m and 0 <= nc < n) or visited[nr][nc]:
                 continue
             grid[r][c] &= ~direction  # clear wall in that direction
@@ -82,33 +83,75 @@ class Maze:
         dfs(grid, src, dst, m, n)
         return cls(grid, src, dst, m, n)
 
-    def render(self) -> PIL.Image.Image:
-        canvas = np.full(
-            (RENDER_CELL_SIZE * self.m + 2, RENDER_CELL_SIZE * self.n + 2),
-            255,
-            dtype=np.uint8,
-        )
-        canvas[0, :] = 0
-        canvas[-1, :] = 0
-        canvas[:, 0] = 0
-        canvas[:, -1] = 0
-        for r, row in enumerate(self.grid):
-            for c, walls in enumerate(row):
-                top = 1 + RENDER_CELL_SIZE * r
-                bottom = top + RENDER_CELL_SIZE - 1
-                left = 1 + RENDER_CELL_SIZE * c
-                right = left + RENDER_CELL_SIZE - 1
-                if walls & DirectionFlags.N:
-                    canvas[top, left : right + 1] = 0
-                if walls & DirectionFlags.S:
-                    canvas[bottom, left : right + 1] = 0
-                if walls & DirectionFlags.E:
-                    canvas[top : bottom + 1, right] = 0
-                if walls & DirectionFlags.W:
-                    canvas[top : bottom + 1, left] = 0
-                if (r, c) == self.dst:
-                    canvas[top+1:bottom, left+1:right] = 127
-        return PIL.Image.fromarray(canvas, mode="L")  # type: ignore
+
+class DfsMouse:
+    def __init__(self, maze: Maze) -> None:
+        self.maze = maze
+        self.pos = maze.src
+
+    def run(self):
+        visited = [[False for _ in range(self.maze.n)] for _ in range(self.maze.m)]
+        stack = [self.maze.src]
+        visited[self.maze.src[0]][self.maze.src[1]] = True
+
+        writer = imageio.get_writer("out/video.mp4", fps=30)  # type: ignore
+        while stack:
+            self.pos = r, c = stack.pop()
+            writer.append_data(np.array(render(self.maze, self)))
+            if (r, c) == self.maze.dst:
+                break
+            for direction in DirectionFlags:
+                if self.maze.grid[r][c] & direction:
+                    continue
+                dr, dc = direction.to_delta()
+                nr, nc = r + dr, c + dc
+                if (
+                    not (0 <= nr < self.maze.m and 0 <= nc < self.maze.n)
+                    or visited[nr][nc]
+                ):
+                    continue
+                visited[nr][nc] = True
+                stack.append((r, c))
+                stack.append((nr, nc))
+
+        writer.close()
 
 
-Maze.generate_random(50, 50).render().save("./maze.png")
+def render(maze: Maze, mouse: DfsMouse) -> PIL.Image.Image:
+    canvas = np.full(
+        (RENDER_CELL_SIZE * maze.m + 2, RENDER_CELL_SIZE * maze.n + 2),
+        255,
+        dtype=np.uint8,
+    )
+    canvas[0, :] = 0
+    canvas[-1, :] = 0
+    canvas[:, 0] = 0
+    canvas[:, -1] = 0
+    for r, row in enumerate(maze.grid):
+        for c, walls in enumerate(row):
+            top = 1 + RENDER_CELL_SIZE * r
+            bottom = top + RENDER_CELL_SIZE - 1
+            left = 1 + RENDER_CELL_SIZE * c
+            right = left + RENDER_CELL_SIZE - 1
+            if walls & DirectionFlags.N:
+                canvas[top, left : right + 1] = 0
+            if walls & DirectionFlags.S:
+                canvas[bottom, left : right + 1] = 0
+            if walls & DirectionFlags.E:
+                canvas[top : bottom + 1, right] = 0
+            if walls & DirectionFlags.W:
+                canvas[top : bottom + 1, left] = 0
+            if (r, c) == maze.dst:
+                canvas[top + 1 : bottom, left + 1 : right] = 127
+            if (r, c) == mouse.pos:
+                canvas[top + 1 : bottom, left + 1 : right] = 63
+    return PIL.Image.fromarray(canvas, mode="L")  # type: ignore
+
+
+def main():
+    maze = Maze.generate_random(20, 20)
+    mouse = DfsMouse(maze)
+    mouse.run()
+
+
+main()
