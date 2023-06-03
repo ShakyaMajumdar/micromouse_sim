@@ -39,7 +39,7 @@ def get_parser() -> argparse.ArgumentParser:
         required=True,
         help="algorithm to use for solving the maze",
     )
-    parser.add_argument("--fps", type=int, default=30, help="fps of output video")
+    parser.add_argument("--frame-duration", type=int, default=33, help="frame duration in output gif")
     parser.add_argument(
         "--cell-size", type=int, default=10, help="size of each cell in output video"
     )
@@ -53,11 +53,11 @@ def main():
     
     maze_spec_file = f"mazes/{maze_id}.json"
     maze_img_file = f"mazes/{maze_id}.png"
-    maze_solve_video_file = f"out/{maze_id}_{args.solver}.mov"
+    maze_solve_video_file = f"out/{maze_id}_{args.solver}.gif"
 
     with open(maze_spec_file, "w") as f:
         f.write(maze.dumps())
-    writer = imageio.get_writer(maze_solve_video_file, fps=args.fps)  # type: ignore
+    writer = imageio.get_writer(maze_solve_video_file, duration=args.frame_duration)  # type: ignore
     mouse = solvers[args.solver](maze)
     with Renderer(maze, writer, render_cell_size=args.cell_size) as renderer:
         PIL.Image.fromarray(renderer.render()).save(maze_img_file)  # type: ignore
