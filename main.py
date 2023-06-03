@@ -23,14 +23,21 @@ def get_parser() -> argparse.ArgumentParser:
         prog="micromouse_sim",
         description="generate and solve mazes using various algorithms",
     )
-    parser.add_argument("rows", type=int, help="number of rows in the maze")
-    parser.add_argument("columns", type=int, help="number of columns in the maze")
-    parser.add_argument(
+    parser.add_argument("--rows", type=int, help="number of rows in the maze (use only with -g/--generator)", required=False)
+    parser.add_argument("--columns", type=int, help="number of columns in the maze (use only with -g/--generator)", required=False)
+
+    group = parser.add_mutually_exclusive_group(required=True)
+    group.add_argument(
         "-g",
         "--generator",
         choices=["dfs"],
-        required=True,
         help="algorithm to use for generating the maze",
+    )
+    group.add_argument(
+        "-l",
+        "--load",
+        type=argparse.FileType("r"),
+        help="spec file to load maze from"
     )
     parser.add_argument(
         "-s",
@@ -41,14 +48,20 @@ def get_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument("--frame-duration", type=int, default=33, help="frame duration in output gif")
     parser.add_argument(
-        "--cell-size", type=int, default=10, help="size of each cell in output video"
+        "--cell-size", type=int, default=10, help="size of each cell in output gif"
     )
     return parser
 
 
 def main():
-    args = get_parser().parse_args()
-    maze = Maze.generate_random(generators[args.generator], args.rows, args.columns)
+    parser = get_parser()
+    args = parser.parse_args()
+    if args.load is not None:
+        maze = Maze.loads(args.load.read())
+    else:
+        if args.rows is None or args.columns is None:
+            parser.error("--rows and --columns must be set when using -g/--generator")
+        maze = Maze.generate_random(generators[args.generator], args.rows, args.columns)
     maze_id = abs(hash(maze))
     
     maze_spec_file = f"mazes/{maze_id}.json"
