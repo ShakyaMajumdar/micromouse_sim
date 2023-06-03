@@ -28,3 +28,6 @@ Example invocation: `py main.py 16 16 --generator=dfs --solver=floodfill`
 
 ## Demos
 ![demo1](./out/2315252315863341411_dfs.gif)
+![demo2](./out/2315252315863341411_floodfill.gif)
+
+DFS solver (left) vs Floodfill solver (right) on the same maze.
