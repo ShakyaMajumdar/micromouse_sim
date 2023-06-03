@@ -50,14 +50,22 @@ def main():
     args = get_parser().parse_args()
     maze = Maze.generate_random(generators[args.generator], args.rows, args.columns)
     maze_id = abs(hash(maze))
-    with open(f"mazes/{maze_id}.json", "w") as f:
+    
+    maze_spec_file = f"mazes/{maze_id}.json"
+    maze_img_file = f"mazes/{maze_id}.png"
+    maze_solve_video_file = f"out/{maze_id}_{args.solver}.mp4"
+
+    with open(maze_spec_file, "w") as f:
         f.write(maze.dumps())
-    writer = imageio.get_writer(f"out/{maze_id}_{args.solver}.mp4", fps=args.fps)  # type: ignore
+    writer = imageio.get_writer(maze_solve_video_file, fps=args.fps)  # type: ignore
     mouse = solvers[args.solver](maze)
     with Renderer(maze, writer, render_cell_size=args.cell_size) as renderer:
-        PIL.Image.fromarray(renderer.render()).save(f"mazes/{maze_id}.png")  # type: ignore
+        PIL.Image.fromarray(renderer.render()).save(maze_img_file)  # type: ignore
         for pos in mouse.run():
             renderer.add_frame(mouse_pos=pos)
+    print(f"maze specifications stored in: {maze_spec_file}")
+    print(f"maze image stored in: {maze_img_file}")
+    print(f"maze solve video stored in: {maze_solve_video_file}")
 
 
 main()
