@@ -24,3 +24,8 @@ options:
 ```
 
 Example invocation: `py main.py 16 16 --generator=dfs --solver=floodfill`
+
+
+## Demos
+![d1](./mazes/832730139725884917.png)
+![d1](./mazes/832730139725884917_floodfill.mp4)
