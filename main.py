@@ -53,7 +53,7 @@ def main():
     
     maze_spec_file = f"mazes/{maze_id}.json"
     maze_img_file = f"mazes/{maze_id}.png"
-    maze_solve_video_file = f"out/{maze_id}_{args.solver}.mp4"
+    maze_solve_video_file = f"out/{maze_id}_{args.solver}.mov"
 
     with open(maze_spec_file, "w") as f:
         f.write(maze.dumps())
