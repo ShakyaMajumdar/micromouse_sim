@@ -37,5 +37,3 @@ def eller_generator(m: int, n: int, src: tuple[int, int], dst: tuple[int, int]):
                 grid[r][c] &= ~DirectionFlags.S
                 grid[r+1][c] &= ~DirectionFlags.N
     return grid
-
-eller_generator(5, 5, (0, 0), (0, 0))
