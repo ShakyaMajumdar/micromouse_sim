@@ -6,6 +6,7 @@ import imageio
 from micromouse_sim import (
     Maze,
     dfs_generator,
+    eller_generator,
     Renderer,
     DfsMouse,
     FloodFillMouse,
@@ -13,7 +14,7 @@ from micromouse_sim import (
     Mouse,
 )
 
-generators: dict[str, MazeGenerator] = {"dfs": dfs_generator}
+generators: dict[str, MazeGenerator] = {"dfs": dfs_generator, "eller": eller_generator}
 
 solvers: dict[str, type[Mouse]] = {"dfs": DfsMouse, "floodfill": FloodFillMouse}
 
@@ -30,7 +31,7 @@ def get_parser() -> argparse.ArgumentParser:
     group.add_argument(
         "-g",
         "--generator",
-        choices=["dfs"],
+        choices=generators.keys(),
         help="algorithm to use for generating the maze",
     )
     group.add_argument(
@@ -42,7 +43,7 @@ def get_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "-s",
         "--solver",
-        choices=["dfs", "floodfill"],
+        choices=solvers.keys(),
         required=True,
         help="algorithm to use for solving the maze",
     )
